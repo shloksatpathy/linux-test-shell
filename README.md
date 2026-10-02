@@ -1,4 +1,4 @@
-# lnx-toolkit
+# linux-test-shell (lnx-toolkit)
 
 A collection of bash scripts for gathering and analyzing Linux system information.
 
@@ -30,7 +30,7 @@ Comprehensive system information reporter that captures detailed details about y
 ```
 
 **Output:**
-Generates a `system_info.txt` file in the current directory with all system information. Output is also displayed to stdout.
+Writes `system_info.txt` to the **current working directory** (overwriting any previous report) and echoes everything to stdout. `*.txt` is git-ignored, so reports aren't committed.
 
 ---
 
@@ -76,23 +76,23 @@ Advanced disk usage analyzer with customizable reporting options.
 ```
 
 **Output:**
-- Partition details with color-coded usage levels
-- Top 10 largest directories in the target path
-- Summary of total, used, and available space
+- Partition details for **all** mounted filesystems (not just `--path`), color-coded in human-readable mode
+- Top 10 largest entries directly under the target path
+- Summary of total, used, and available space for the filesystem holding the target path
 
 ---
 
 ## Requirements
 
 - Bash 4.0+
-- Standard Linux utilities: `df`, `du`, `free`, `ps`, `hostname`, `lscpu`, `uname`, `ip`
+- Standard Linux utilities: `df`, `du`, `free`, `ps`, `hostname`, `lscpu`, `uname`, `ip`, `numfmt` (coreutils)
 
 ## Getting Started
 
 1. Clone or download the repository:
    ```bash
-   git clone <repository-url> lnx-toolkit
-   cd lnx-toolkit
+   git clone <repository-url> linux-test-shell
+   cd linux-test-shell
    ```
 
 2. Make scripts executable:
@@ -109,10 +109,17 @@ Advanced disk usage analyzer with customizable reporting options.
 
 ## Color Output
 
-The disk_report.sh script uses color-coded output to highlight disk usage:
-- **Green**: Normal usage (< 80%)
-- **Yellow**: Warning level (80-99%)
-- **Red**: Critical level (≥ threshold, if specified)
+In human-readable mode (the default), `disk_report.sh` highlights partition rows:
+- **Red**: usage ≥ `--threshold` (only when a threshold is given)
+- **Yellow**: usage above 80%
+- **No color**: everything else
+
+With `--bytes`, partition rows are printed plain and `--threshold` has no effect.
+
+## Known Issues
+
+- **Summary sizes are off by 1024× in human-readable mode.** `df` reports 1K blocks, but the summary passes them to `numfmt --to=iec` as bytes, so a 468G disk shows as `468M`. Read the partition table instead until this is fixed (`numfmt --from-unit=1024 --to=iec` would fix it).
+- **`--bytes` is only partly bytes.** The top-directories list uses `du -sb` (bytes), but the partition table and summary are plain `df` output, which is in 1K blocks.
 
 ## Tips
 
